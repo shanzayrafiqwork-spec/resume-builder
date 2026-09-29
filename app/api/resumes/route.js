@@ -1,57 +1,43 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
+import dbConnect from "@/lib/db"; // Ya aapka db connection path (e.g. ../../../lib/db)
 import Resume from "@/models/Resume";
-import path from "path";
-import fs from "fs";
 
 export async function POST(req) {
   try {
-    await connectDB();
-    const data = await req.formData();
+    await dbConnect();
 
-    const name = data.get("name");
-    const email = data.get("email");
-    const phone = data.get("phone");
-    const skills = data.get("skills");
-    const experience = data.get("experience");
-    const file = data.get("file");
+    const formData = await req.formData();
+    const name = formData.get("name");
+    const email = formData.get("email");
+    const phone = formData.get("phone");
+    const skills = formData.get("skills");
+    const experience = formData.get("experience");
+    const file = formData.get("file");
 
-    let imageUrl = "";
-
-    // File handling
-    if (file && typeof file === "object" && file.name) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      // Unique filename create karein
-      const uniqueName = Date.now() + "-" + file.name.replace(/\s+/g, "_");
-      const uploadDir = path.join(process.cwd(), "uploads");
-
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      const filePath = path.join(uploadDir, uniqueName);
-      fs.writeFileSync(filePath, buffer);
-
-      // Browser URL set karein
-      imageUrl = `/api/uploads/${uniqueName}`;
+    let fileName = "";
+    if (file && typeof file !== "string") {
+      fileName = file.name || "uploaded-file";
     }
 
+    // Save metadata to MongoDB without writing file to local disk (EROFS Fix)
     const newResume = await Resume.create({
       name,
       email,
       phone,
       skills,
       experience,
-      imageUrl, 
+      fileName,
     });
 
-    return NextResponse.json({ success: true, data: newResume });
+    return NextResponse.json({
+      success: true,
+      data: newResume,
+    });
   } catch (error) {
+    console.error("API Error:", error);
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 400 }
+      { status: 500 }
     );
   }
 }
