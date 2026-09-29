@@ -1,33 +1,23 @@
 import mongoose from "mongoose";
 
-const ResumeSchema = new mongoose.Schema(
-  {
-    fullName: {
-      type: String,
-      required: [true, "Full name is required"],
-    },
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-    },
-    phone: {
-      type: String,
-    },
-    skills: {
-      type: [String],
-      default: [],
-    },
-    experience: {
-      type: String,
-    },
-    education: {
-      type: String,
-    },
-    filePath: {
-      type: String,
-    },
+const ResumeSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Full name is required"],
+    trim: true,
   },
-  { timestamps: true }
-);
+  email: {
+    type: String,
+    required: [true, "Email is required"],
+    trim: true,
+  },
+  phone: String,
+  skills: String,
+  experience: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
 export default mongoose.models.Resume || mongoose.model("Resume", ResumeSchema);

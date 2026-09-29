@@ -1,51 +1,57 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
+import connectDB from "@/lib/mongodb";
 import Resume from "@/models/Resume";
+import path from "path";
+import fs from "fs";
 
-// GET: Fetch all resumes
-export async function GET() {
-  try {
-    await dbConnect();
-    const resumes = await Resume.find({}).sort({ createdAt: -1 });
-    return NextResponse.json({ success: true, data: resumes }, { status: 200 });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-// POST: Create a new resume record
 export async function POST(req) {
   try {
-    await dbConnect();
-    const body = await req.json();
+    await connectDB();
+    const data = await req.formData();
 
-    const { fullName, email, phone, skills, experience, education, filePath } = body;
+    const name = data.get("name");
+    const email = data.get("email");
+    const phone = data.get("phone");
+    const skills = data.get("skills");
+    const experience = data.get("experience");
+    const file = data.get("file");
 
-    if (!fullName || !email) {
-      return NextResponse.json(
-        { success: false, error: "Full Name and Email are required fields." },
-        { status: 400 }
-      );
+    let imageUrl = "";
+
+    // File handling
+    if (file && typeof file === "object" && file.name) {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // Unique filename create karein
+      const uniqueName = Date.now() + "-" + file.name.replace(/\s+/g, "_");
+      const uploadDir = path.join(process.cwd(), "uploads");
+
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const filePath = path.join(uploadDir, uniqueName);
+      fs.writeFileSync(filePath, buffer);
+
+      // Browser URL set karein
+      imageUrl = `/api/uploads/${uniqueName}`;
     }
 
     const newResume = await Resume.create({
-      fullName,
+      name,
       email,
       phone,
-      skills: Array.isArray(skills) ? skills : skills ? skills.split(",").map(s => s.trim()) : [],
+      skills,
       experience,
-      education,
-      filePath,
+      imageUrl, 
     });
 
-    return NextResponse.json({ success: true, data: newResume }, { status: 201 });
+    return NextResponse.json({ success: true, data: newResume });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }
