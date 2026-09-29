@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/db"; // Ya aapka db connection path (e.g. ../../../lib/db)
+import dbConnect from "../../../lib/mongodb";
 import Resume from "@/models/Resume";
 
 export async function POST(req) {
@@ -7,7 +7,7 @@ export async function POST(req) {
     await dbConnect();
 
     const formData = await req.formData();
-    const name = formData.get("name");
+    const name = formData.get("name") || formData.get("fullName");
     const email = formData.get("email");
     const phone = formData.get("phone");
     const skills = formData.get("skills");
@@ -16,10 +16,9 @@ export async function POST(req) {
 
     let fileName = "";
     if (file && typeof file !== "string") {
-      fileName = file.name || "uploaded-file";
+      fileName = file.name || "uploaded_file";
     }
 
-    // Save metadata to MongoDB without writing file to local disk (EROFS Fix)
     const newResume = await Resume.create({
       name,
       email,

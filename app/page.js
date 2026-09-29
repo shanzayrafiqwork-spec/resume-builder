@@ -15,23 +15,23 @@ export default function Home() {
     experience: "",
   });
   const [file, setFile] = useState(null);
-  const [base64Image, setBase64Image] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  // File change event + instant Base64 conversion
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
     setFile(selectedFile);
 
+    // Agar image ho toh Base64 conversion
     if (selectedFile.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setBase64Image(reader.result); // Base64 data string store kar rahe hain
+        setPreviewUrl(reader.result);
       };
       reader.readAsDataURL(selectedFile);
     } else {
-      setBase64Image(null);
+      setPreviewUrl(null); // PDF / Doc ke liye image preview nahi hota
     }
   };
 
@@ -57,10 +57,11 @@ export default function Home() {
 
       const result = await res.json();
       if (result.success) {
-        // Guaranteed picture availability for success page
         const submissionData = {
           ...result.data,
-          displayImage: base64Image || result.data?.imageUrl,
+          displayImage: previewUrl,
+          fileName: file ? file.name : null,
+          fileType: file ? file.type : null,
         };
         localStorage.setItem("submittedResume", JSON.stringify(submissionData));
         router.push("/success");
@@ -159,15 +160,14 @@ export default function Home() {
               )}
             </div>
 
-            {/* Live Client Preview */}
-            {base64Image && (
+            {previewUrl && (
               <div style={{ marginTop: "16px", textAlign: "center" }}>
                 <p style={{ fontSize: "12px", color: "#6d28d9", marginBottom: "8px", fontWeight: "600" }}>
                   Image Preview:
                 </p>
                 <div style={{ width: "100px", height: "100px", margin: "0 auto", overflow: "hidden", borderRadius: "12px", border: "2px solid #7c3aed" }}>
                   <img
-                    src={base64Image}
+                    src={previewUrl}
                     alt="Uploaded Preview"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />

@@ -14,6 +14,10 @@ export default function SuccessPage() {
     }
   }, []);
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (!data) {
     return (
       <div className="resume-card" style={{ textAlign: "center" }}>
@@ -28,8 +32,9 @@ export default function SuccessPage() {
   const imageSrc = data.displayImage || data.imageUrl;
 
   return (
-    <div className="resume-card">
+    <div className="resume-card" id="printable-resume">
       <div
+        className="no-print"
         style={{
           backgroundColor: "#ede9fe",
           border: "1px solid #ddd6fe",
@@ -49,83 +54,104 @@ export default function SuccessPage() {
 
       <h3
         style={{
-          fontSize: "16px",
+          fontSize: "18px",
           color: "#0f172a",
-          marginBottom: "12px",
-          borderBottom: "1px solid #e2e8f0",
-          paddingBottom: "6px",
+          marginBottom: "16px",
+          borderBottom: "2px solid #e2e8f0",
+          paddingBottom: "8px",
         }}
       >
-        Candidate Details
+        Candidate Profile Details
       </h3>
 
-      <div style={{ display: "grid", gap: "10px", fontSize: "14px", color: "#334155" }}>
-        <div><strong>Full Name:</strong> {data.name || data.fullName}</div>
-        <div><strong>Email:</strong> {data.email}</div>
-        <div><strong>Phone:</strong> {data.phone || "N/A"}</div>
-        <div><strong>Skills:</strong> {data.skills || "N/A"}</div>
-        <div><strong>Experience:</strong> {data.experience || "N/A"}</div>
-      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: imageSrc ? "1fr 140px" : "1fr",
+          gap: "20px",
+          alignItems: "start",
+        }}
+      >
+        <div style={{ display: "grid", gap: "10px", fontSize: "14px", color: "#334155" }}>
+          <div><strong>Full Name:</strong> {data.name || data.fullName}</div>
+          <div><strong>Email:</strong> {data.email}</div>
+          <div><strong>Phone:</strong> {data.phone || "N/A"}</div>
+          <div><strong>Skills:</strong> {data.skills || "N/A"}</div>
+          <div><strong>Experience:</strong> {data.experience || "N/A"}</div>
+          {data.fileName && <div><strong>Attached File Name:</strong> {data.fileName}</div>}
+        </div>
 
-      {/* Profile Picture Box */}
-      {imageSrc ? (
-        <div
-          style={{
-            marginTop: "20px",
-            padding: "16px",
-            backgroundColor: "#f8fafc",
-            borderRadius: "12px",
-            border: "1px solid #cbd5e1",
-            textAlign: "center",
-          }}
-        >
-          <p style={{ fontWeight: "600", fontSize: "14px", color: "#334155", marginBottom: "10px" }}>
-            Uploaded Candidate Picture:
-          </p>
+        {/* Profile Picture Display */}
+        {imageSrc && (
           <div
             style={{
-              width: "130px",
-              height: "130px",
-              margin: "0 auto",
-              borderRadius: "12px",
-              overflow: "hidden",
-              border: "3px solid #7c3aed",
-              boxShadow: "0 4px 12px rgba(124, 58, 237, 0.2)",
+              textAlign: "center",
             }}
           >
-            <img
-              src={imageSrc}
-              alt="Candidate Photo"
+            <div
               style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
+                width: "130px",
+                height: "130px",
+                margin: "0 auto",
+                borderRadius: "12px",
+                overflow: "hidden",
+                border: "3px solid #7c3aed",
+                boxShadow: "0 4px 12px rgba(124, 58, 237, 0.2)",
               }}
-            />
+            >
+              <img
+                src={imageSrc}
+                alt="Candidate Photo"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            </div>
           </div>
-        </div>
-      ) : (
-        <div
-          style={{
-            marginTop: "16px",
-            padding: "12px",
-            backgroundColor: "#f1f5f9",
-            borderRadius: "8px",
-            textAlign: "center",
-            fontSize: "13px",
-            color: "#64748b",
-          }}
-        >
-          No image file uploaded.
-        </div>
-      )}
+        )}
+      </div>
 
-      <div style={{ marginTop: "24px" }}>
-        <Link href="/" className="btn-submit" style={{ textDecoration: "none", textAlign: "center" }}>
+      {/* Action Buttons */}
+      <div
+        className="no-print"
+        style={{ marginTop: "28px", display: "flex", gap: "12px", justifyContent: "center" }}
+      >
+        <button
+          onClick={handlePrint}
+          className="btn-submit"
+          style={{ width: "auto", padding: "12px 24px", backgroundColor: "#059669" }}
+        >
+          📄 Download as PDF
+        </button>
+        <Link
+          href="/"
+          className="btn-submit"
+          style={{ textDecoration: "none", textAlign: "center", width: "auto", padding: "12px 24px" }}
+        >
           Submit Another Resume
         </Link>
       </div>
+
+      {/* Print Stylesheet for clean PDF output */}
+      <style jsx global>{`
+        @media print {
+          body {
+            background: #ffffff !important;
+            padding: 0 !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .resume-card {
+            box-shadow: none !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
